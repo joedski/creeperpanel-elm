@@ -11,6 +11,10 @@
     "nw",
     "creeperhost"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joedski/creeperpanel-elm.git"
+  },
   "author": "Joseph Sikorski <joedski@gmail.com>",
   "license": "ISC",
   "dependencies": {

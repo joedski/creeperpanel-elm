@@ -72,3 +72,9 @@ view address model =
 consoleView : Signal.Address Action -> Model -> Html
 consoleView address model =
     Console.view (Signal.forwardTo address (ModifyConsole)) model.console
+
+
+
+-- CH-API --
+
+-- ports...

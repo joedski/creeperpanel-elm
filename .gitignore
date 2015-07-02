@@ -57,3 +57,9 @@ bower_components
 
 # Elm stuff.
 elm-stuff
+
+# Elm build artifacts.
+elm.js
+
+# Build dir.
+public

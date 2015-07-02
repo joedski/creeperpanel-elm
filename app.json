@@ -1,0 +1,8 @@
+{
+	"name": "CreeperPanel",
+	"repository": "https://github.com/joedski/creeperpanel-elm.git",
+	"env": {
+		"ELM_COMPILE": "elm make app/CreeperPanel.elm --output bin",
+		"ELM_STATIC_DIR": "bin"
+	}
+}

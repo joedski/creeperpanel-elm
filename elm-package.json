@@ -1,6 +1,6 @@
 {
     "version": "0.0.0",
-    "summary": "Simple control panel for CreeperHost Minecraft Servers implemented in Elm+NW.js.",
+    "summary": "Simple control panel for CreeperHost Minecraft Servers made in Elm+NW.js.",
     "repository": "https://github.com/joedski/creeperpanel-elm.git",
     "license": "ISC",
     "source-directories": [

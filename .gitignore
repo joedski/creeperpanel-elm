@@ -51,6 +51,7 @@ build/Release
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
+app/assets/node_modules
 
 # Front-end dependency directory
 bower_components

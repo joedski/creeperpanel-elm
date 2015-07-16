@@ -12,27 +12,22 @@ Intent: Basic operation.
 	- log : ConsoleLogModel
 	- serverStats : ServerStatsModel
 
-- ConsoleLog:
+- ConsoleLogModel:
 	- lines : List ConsoleLogLineModel
-	- status : Maybe ConsoleLogStatus
+	- status : LoadingStatus
 
 - ServerStatsModel:
 	- cpu : Float
 	- ram : Float
 	- hdd : Float
-	- status : Maybe ServerStatsStatus
+	- status : LoadingStatus
 
 - ConsoleLogLineModel:
 	- text : String
 
 Auxiliary Types:
 
-- ConsoleLogStatus: Union of...
-	- Updating
-	- Updated
-	- Errored String
-
-- ServerStatsStatus: Union of...
+- LoadingStatus: Union of...
 	- Updating
 	- Updated
 	- Errored String

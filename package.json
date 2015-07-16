@@ -1,6 +1,6 @@
 {
   "name": "creeperpanel-elm",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Simple control panel for CreeperHost Minecraft Servers implemented in Elm+NW.js.",
   "main": "public/index.html",
   "scripts": {

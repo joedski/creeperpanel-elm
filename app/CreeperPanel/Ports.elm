@@ -4,16 +4,55 @@ module CreeperPanel.Ports
     )
     where
 
+import Json.Decode as Decode exposing ((:=))
 import Time
 import CreeperPanel.Aries as Aries
 import CreeperPanel.Model as Model
+import CreeperPanel.Actions as Actions
+
+import Debug
 
 -- Action signals from responses need to be type Signal (Maybe Action),
 -- but response signals must be Signal SomeResponse
 
+
+
+----- Utility Functions -----
+
+boolOfMaybe : Maybe a -> Bool
+boolOfMaybe maybeSomething =
+    case maybeSomething of
+        Just something -> True
+
+        Nothing -> False
+
+reactionTo : Result String Aries.Response -> Maybe Actions.Action
+reactionTo responseResult =
+    case responseResult of
+        Ok response ->
+            case response of
+                Aries.NullResponse -> Nothing
+
+                Aries.Log logLines ->
+                    Just Actions.UpdateLog Model.logModelOf logLines
+
+                -- In the future this may carry additional information.  But for now, it does nothing.
+                Aries.GenericSuccess -> Nothing                
+
+        Err message ->
+            Nothing |> Debug.log ("Error: " ++ message)
+
+
+
+----- Internal Details -----
+
 logTicker : Signal Time.Time
 logTicker =
     Time.every (Time.second * 10)
+
+
+
+----- Public Functions -----
 
 -- I can't think of anothing way to do this yet,
 -- so I'm just starting with Nothing which, on output, I think maps to JS null.
@@ -24,18 +63,12 @@ logRequests maybeCredentialsSignal =
         maybeCredentialsSignalOnTick : Signal (Maybe Aries.Credentials)
         maybeCredentialsSignalOnTick =
             Signal.sampleOn logTicker maybeCredentialsSignal
-
-        skipNothings m =
-            case m of
-                Just a -> True
-
-                Nothing -> False
     in
         Signal.map
             (Maybe.map Aries.consoleLogRequest)
             maybeCredentialsSignalOnTick
         |> Signal.filter
-            skipNothings
+            boolOfMaybe
             Nothing
 
 credentialsOfServer : Model.ServerModel -> Aries.Credentials
@@ -43,3 +76,20 @@ credentialsOfServer server =
     { key = server.key
     , secret = server.secret
     }
+
+-- Doing the same thing again here with filtering Nothings.
+-- Can't think of a better way to do this. but at least here it's hidden.
+-- While I'm reasonably sure Nothing will only appear as the initial value,
+-- this still feels skeevy.
+logResponseReactions : Signal Decode.Value -> Signal (Maybe Actions.Action)
+logResponseReactions logResponses =
+    let
+        decodeResponse =
+            Decode.decodeValue Aries.responseDecoder
+    in
+        Signal.map
+            (reactionTo << decodeResponse)
+            logResponses
+        |> Signal.filter
+            boolOfMaybe
+            Nothing

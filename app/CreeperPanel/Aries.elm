@@ -3,12 +3,20 @@ module CreeperPanel.Aries
     , Credentials
     , consoleLogRequest
     , consoleCommandRequest
-    , GenericResponse
-    , LogResponse
-    , genericNonresponse
-    , logNonresponse
+    , Response(..)
+    , responseDecoder
     )
     where
+
+import Json.Decode as Decode exposing ((:=))
+
+{-
+Initializing Response Ports
+===========================
+
+Response Ports should be initialized with a null, which will be decoded as a NullResponse.
+This also means at any time, a null may be written, and it will be decoded as such.
+-}
 
 ---- Requests ----
 
@@ -48,26 +56,31 @@ consoleCommandRequest credentials command =
 
 ---- Responses ----
 
-type alias GenericResponse =
-    { success : Maybe Bool
-    , message : Maybe String
-    }
+type Response
+    = NullResponse
+    | GenericSuccess
+    | Log (List String)
 
-type alias LogResponse =
-    { success : Maybe Bool
-    , message : Maybe String
-    , log : Maybe (List String)
-    }
+responseDecoder : Decode.Decoder Response
+responseDecoder =
+    Decode.oneOf
+        [ Decode.null NullResponse
+        , ("status" := Decode.string) `Decode.andThen` \ status ->
+            case status of
+                "success" ->
+                    Decode.oneOf
+                        [ logResponseDecoder
+                        , Decode.succeed GenericSuccess
+                        ]
 
-genericNonresponse : GenericResponse
-genericNonresponse =
-    { success = Nothing
-    , message = Nothing
-    }
+                "error" ->
+                    ("message" := Decode.string) `Decode.andThen` Decode.fail
 
-logNonresponse : LogResponse
-logNonresponse =
-    { success = Nothing
-    , message = Nothing
-    , log = Nothing
-    }
+                _ ->
+                    Decode.fail ("Encountered unknown response status: " ++ status)
+        ]
+
+logResponseDecoder : Decode.Decoder Response
+logResponseDecoder =
+    ("log" := Decode.list Decode.string) `Decode.andThen` \ logLines ->
+        Decode.succeed (Log logLines)

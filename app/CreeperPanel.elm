@@ -5,6 +5,7 @@ import CreeperPanel.Model as Model
 import CreeperPanel.Actions as Actions
 import CreeperPanel.View as View
 import CreeperPanel.Ports as Ports
+import Json.Decode as Decode
 import Html
 
 -- Ports
@@ -20,31 +21,13 @@ port logRequests : Signal (Maybe Aries.Request)
 port logRequests =
     Ports.logRequests credentials
 
-port logResponses : Signal Aries.LogResponse
+port logResponses : Signal Decode.Value
 
 -- Actions
 
 logResponseReactions : Signal (Maybe Actions.Action)
 logResponseReactions =
-    let
-        reactionTo response =
-            case response.success of
-                Nothing -> Nothing
-
-                Just True -> Just (Actions.UpdateLog (Model.logModelOf (Maybe.withDefault [] response.log)))
-
-                -- TODO: Error message.
-                Just False -> Nothing
-
-        skipNothings m =
-            case m of
-                Just a -> True
-
-                Nothing -> False
-
-    in
-        -- what.  There must be a better way to do this.
-        Signal.filter skipNothings Nothing (Signal.map reactionTo logResponses)
+    Ports.logResponseReactions logResponses
 
 userActions : Signal.Mailbox (Maybe Actions.Action)
 userActions =

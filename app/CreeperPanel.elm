@@ -1,234 +1,86 @@
 module CreeperPanel where
 
+import CreeperPanel.Aries as Aries
+import CreeperPanel.Model as Model
+import CreeperPanel.Actions as Actions
+import CreeperPanel.View as View
+import CreeperPanel.Ports as Ports
 import Html
-import Html.Attributes as Ats
-import Html.Events as Events
-import Time
 
+-- Ports
 
+-- TODO: Get this through some method other than initial loading via JS...
+port initServer : Model.ServerModel
 
--- ======== Model ======== --
+credentials : Signal (Maybe Aries.Credentials)
+credentials =
+    Signal.map (Maybe.map Ports.credentialsOfServer) currentServerModel
 
-type alias Model =
-    { log : ConsoleLogModel
-    , currentServer : Maybe ServerModel
-    , serverStats : ServerStatsModel
-    }
+port logRequests : Signal (Maybe Aries.Request)
+port logRequests =
+    Ports.logRequests credentials
 
-type alias ConsoleLogModel =
-    LoadingStated
-        { lines : List ConsoleLogLineModel
-        }
+port logResponses : Signal Aries.LogResponse
 
-type alias ServerModel =
-    { name : String
-    , key : String
-    , secret : String
-    }
+-- Actions
 
-type alias ServerStatsModel =
-    LoadingStated
-        { cpu : Float
-        , ram : Float
-        , hdd : Float
-        }
+logResponseReactions : Signal (Maybe Actions.Action)
+logResponseReactions =
+    let
+        reactionTo response =
+            case response.success of
+                Nothing -> Nothing
 
-type alias ConsoleLogLineModel =
-    { text : String
-    }
+                Just True -> Just (Actions.UpdateLog (Model.logModelOf (Maybe.withDefault [] response.log)))
 
-type alias LoadingStated a =
-    { a
-        | loadingStatus : LoadingStatus
-    }
+                -- TODO: Error message.
+                Just False -> Nothing
 
+        skipNothings m =
+            case m of
+                Just a -> True
 
+                Nothing -> False
 
-type LoadingStatus
-    = NotLoaded
-    | AwaitingUpdate
-    | Updated
-    | Errored String
+    in
+        -- what.  There must be a better way to do this.
+        Signal.filter skipNothings Nothing (Signal.map reactionTo logResponses)
 
+userActions : Signal.Mailbox (Maybe Actions.Action)
+userActions =
+    Signal.mailbox Nothing
 
-
-initModel : Model
-initModel =
-    { log =
-        { lines = []
-        , loadingStatus = NotLoaded
-        }
-    , currentServer = Just
-        { name = ""
-        , key = ""
-        , secret = ""
-        }
-    , serverStats =
-        { cpu = 0
-        , ram = 0
-        , hdd = 0
-        , loadingStatus = NotLoaded
-        }
-    }
-
-
-
--- ======== Actions ======== --
-
-type Action
-    = StartLoadingLog
-    | UpdateLog ConsoleLogModel
-    | ErrorLog String
-    | StartLoadingServerStats
-    | UpdateServerStats ServerStatsModel
-    | ErrorServerStats String
-
-
-
--- ======== Update ======== --
-
-update : Action -> Model -> Model
-update action model =
-    case action of
-        StartLoadingLog ->
-            { model | log <- updateLoadingStatus AwaitingUpdate model.log }
-
-        UpdateLog newLog ->
-            { model | log <- updateLoadingStatus Updated newLog }
-
-        ErrorLog message ->
-            { model | log <- updateLoadingStatus (Errored message) model.log }
-            
-        StartLoadingServerStats ->
-            { model | serverStats <- updateLoadingStatus AwaitingUpdate model.serverStats }
-
-        UpdateServerStats newServerStats ->
-            { model | serverStats <- updateLoadingStatus Updated newServerStats }
-
-        ErrorServerStats message ->
-            { model | serverStats <- updateLoadingStatus (Errored message) model.serverStats }
-
-updateLoadingStatus : LoadingStatus -> LoadingStated a -> LoadingStated a
-updateLoadingStatus status statedModel =
-    { statedModel | loadingStatus <- status }
-
-
-
--- ======== View ======== --
-
-view : Signal.Address Action -> Model -> Html.Html
-view address model =
-    Html.div [ Ats.class "app" ]
-        [ viewConsole address model
+appActions : Signal (Maybe Actions.Action)
+appActions =
+    Signal.mergeMany
+        [ userActions.signal
+        , logResponseReactions
         ]
 
-viewConsole : Signal.Address Action -> Model -> Html.Html
-viewConsole address model =
-    Html.div [ Ats.class "console" ]
-        [ viewConsoleLog address model.log
-        ]
+-- Model
 
-viewConsoleLog : Signal.Address Action -> ConsoleLogModel -> Html.Html
-viewConsoleLog address model =
-    Html.div [ Ats.class "console-log" ]
-        List.map (viewConsoleLogLine address) model.lines
-
-viewConsoleLogLine : Signal.Address Action -> ConsoleLogLineModel -> Html.Html
-viewConsoleLogLine address model =
-    Html.div [ Ats.class "console-log-line" ] [ text model.text ]
-
--- TODO: Server Stats.
-
-
-
--- ======== Wiring: Ports ======== --
-
-logTicker : Signal Time.Time
-logTicker =
-    Time.every (Time.second * 10)
-
------ Aries: Console Log -----
-
-type alias AriesEmptyParameters =
-    { data : {} -- no additional data being passed through.
-    }
-
-type alias AriesCredentialed requestParameters =
-    { requestParameters
-        | key : String
-        , secret : String
-    }
-
-type alias AriesConsoleLogRequest =
-    { parameters : AriesCredentialed AriesEmptyParameters
-    }
-
-port ariesConsoleLogRequests : Signal (Maybe AriesConsoleLogRequest)
-port ariesConsoleLogRequests =
+model : Signal Model.Model
+model =
     let
-        requestOf model =
-            case model.currentServer of
-                Nothing ->
-                    Nothing
+        initModelWithoutServer = Model.initModel
 
-                Just server ->
-                    Just { parameters =
-                        { data = {}
-                        , key = server.key
-                        , secret = server.secret
-                        }
-                    }
-    in
-        model
-        |> Signal.sampleOn logTicker
-        |> Signal.map requestOf
+        initModel =
+            { initModelWithoutServer | currentServer <- Just initServer }
+    in 
+        Signal.foldp
+            (\ (Just action) model -> Actions.update action model)
+            initModel
+            appActions
 
-type alias AriesConsoleLogResponse =
-    AriesErrorableResponse
-        { log : List String }
+currentServerModel : Signal (Maybe Model.ServerModel)
+currentServerModel =
+    Signal.map (\ model -> model.currentServer) model
 
-type alias AriesErrorableResponse r =
-    { r | errorMessage : Maybe String }
-
-port ariesConsoleLogResponses : Signal (Maybe AriesConsoleLogResponse)
-
-ariesConsoleLogResponseActions : Signal (Maybe Action)
-ariesConsoleLogResponseActions =
-    let
-        consoleLogModelOf logResponse =
-            { lines = List.map consoleLogLineModelOf logResponse.lines
-            , loadingStatus = Updated
-            }
-
-        actionOf : AriesConsoleLogResponse
-        actionOf logResponse =
-            UpdateLog (consoleLogModelOf logResponse)
-    in
-        Signal.map (Maybe.map actionOf) ariesConsoleLogResponses
-
-
-
-
--- ======== Wiring: Main ======== --
-
--- This must be defined in the namespace if we want inspect it elsewhere. (Mostly in API requets.)
-model : Signal Action -> Signal Model
-model appActions =
-    Signal.foldp
-        (\ (Just action) model -> update action model)
-        initModel
-        appActions
+-- Main
 
 main : Signal Html.Html
 main =
     let
-        userActionsMailbox : Signal.Mailbox (Maybe Action)
-        userActionsMailbox =
-            Signal.mailbox Nothing
-
-        appActions =
-            Signal.mergeMany
-                [ userActionsMailbox.signal
-                ]
+        userActionsAddress = Signal.forwardTo userActions.address Just
     in
-        Signal.map (view userActionsAddress) (model appActions)
+        Signal.map (View.view userActionsAddress) model

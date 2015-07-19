@@ -1,6 +1,7 @@
 module CreeperPanel.Ports
     ( logRequests
     , credentialsOfServer
+    , logResponseReactions
     )
     where
 
@@ -28,13 +29,13 @@ boolOfMaybe maybeSomething =
 
 reactionTo : Result String Aries.Response -> Maybe Actions.Action
 reactionTo responseResult =
-    case responseResult of
+    case (Debug.log "reactionTo" responseResult) of
         Ok response ->
             case response of
                 Aries.NullResponse -> Nothing
 
                 Aries.Log logLines ->
-                    Just Actions.UpdateLog Model.logModelOf logLines
+                    Just (Actions.UpdateLog (Model.logModelOf logLines))
 
                 -- In the future this may carry additional information.  But for now, it does nothing.
                 Aries.GenericSuccess -> Nothing                

@@ -10,11 +10,7 @@ exports.init = function init( Elm ) {
 			secret: testKeys.secret
 		},
 
-		logResponses: {
-			success: null,
-			message: null,
-			log: null
-		}
+		logResponses: null
 	});
 
 	// ports here.

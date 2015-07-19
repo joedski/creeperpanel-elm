@@ -65,22 +65,26 @@ responseDecoder : Decode.Decoder Response
 responseDecoder =
     Decode.oneOf
         [ Decode.null NullResponse
-        , ("status" := Decode.string) `Decode.andThen` \ status ->
-            case status of
-                "success" ->
-                    Decode.oneOf
-                        [ logResponseDecoder
-                        , Decode.succeed GenericSuccess
-                        ]
-
-                "error" ->
-                    ("message" := Decode.string) `Decode.andThen` Decode.fail
-
-                _ ->
-                    Decode.fail ("Encountered unknown response status: " ++ status)
+        , nonNullResponseDecoder
         ]
+
+nonNullResponseDecoder : Decode.Decoder Response
+nonNullResponseDecoder =
+    ("status" := Decode.string) `Decode.andThen` \ status ->
+        case status of
+            "success" ->
+                Decode.oneOf
+                    [ logResponseDecoder
+                    , Decode.succeed GenericSuccess
+                    ]
+
+            "error" ->
+                ("message" := Decode.string) `Decode.andThen` Decode.fail
+
+            _ ->
+                Decode.fail ("Encountered unknown response status: " ++ status)
 
 logResponseDecoder : Decode.Decoder Response
 logResponseDecoder =
-    ("log" := Decode.list Decode.string) `Decode.andThen` \ logLines ->
-        Decode.succeed (Log logLines)
+    ("log" := Decode.list Decode.string)
+        `Decode.andThen` \ logLines -> Decode.succeed (Log logLines)

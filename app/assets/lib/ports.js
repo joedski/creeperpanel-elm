@@ -13,8 +13,8 @@ exports.init = function init( elmApp ) {
 
 			function actualSend() {
 				elmApp.ports.logResponses.send({
-					success: true,
-					message: null,
+					status: "success",
+					// message: null,
 					log: getPretendLogLines( count )
 				});
 			}

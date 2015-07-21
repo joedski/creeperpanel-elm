@@ -87,4 +87,5 @@ nonNullResponseDecoder =
 logResponseDecoder : Decode.Decoder Response
 logResponseDecoder =
     ("log" := Decode.list Decode.string)
-        `Decode.andThen` \ logLines -> Decode.succeed (Log logLines)
+        `Decode.andThen` \ logLines ->
+            Decode.succeed (Log logLines)

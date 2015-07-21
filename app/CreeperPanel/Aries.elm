@@ -75,7 +75,7 @@ nonNullResponseDecoder =
             "success" ->
                 Decode.oneOf
                     [ logResponseDecoder
-                    , Decode.succeed GenericSuccess
+                    --, Decode.succeed GenericSuccess
                     ]
 
             "error" ->

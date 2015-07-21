@@ -82,11 +82,11 @@ credentialsOfServer server =
 -- Can't think of a better way to do this. but at least here it's hidden.
 -- While I'm reasonably sure Nothing will only appear as the initial value,
 -- this still feels skeevy.
-logResponseReactions : Signal Decode.Value -> Signal (Maybe Actions.Action)
+logResponseReactions : Signal String -> Signal (Maybe Actions.Action)
 logResponseReactions logResponses =
     let
         decodeResponse =
-            Decode.decodeValue Aries.responseDecoder
+            Decode.decodeString Aries.responseDecoder
     in
         Signal.map
             (reactionTo << decodeResponse)

@@ -12,11 +12,13 @@ exports.init = function init( elmApp ) {
 			setTimeout( actualSend, 2000 );
 
 			function actualSend() {
-				elmApp.ports.logResponses.send({
+				// Stringifying because Elm bugs out if you pass an array created in the Node context rather than in the Webkit context.
+				// You have to in some manner bring in the window object, and use window.Array.apply( null, nodeSideArray ) to generate a compliant array.
+				elmApp.ports.logResponses.send( JSON.stringify({
 					status: "success",
 					// message: null,
 					log: getPretendLogLines( count )
-				});
+				}));
 			}
 		}
 

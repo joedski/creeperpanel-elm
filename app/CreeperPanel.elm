@@ -21,7 +21,7 @@ port logRequests : Signal (Maybe Aries.Request)
 port logRequests =
     Ports.logRequests credentials
 
-port logResponses : Signal Decode.Value
+port logResponses : Signal String
 
 -- Actions
 

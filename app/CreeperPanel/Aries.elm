@@ -58,7 +58,38 @@ consoleCommandRequest credentials command =
 
 ---- Requests: Encoded ----
 
-type alias EncodedRequest = Encode.Value
+type alias EncodedRequest = String
+
+encodedRequest : Request -> String
+encodedRequest request =
+    let
+        encodeCredentials credentials =
+            Encode.object
+                [ ( "key", Encode.string credentials.key )
+                , ( "secret", Encode.string credentials.secret )
+                ]
+
+        encodeCommand (section, command) =
+            Encode.list
+                [ Encode.string section
+                , Encode.string command
+                ]
+
+        encodeParameters parameters =
+            Encode.list
+                List.map
+                    ((paramName, paramValue) ->
+                        [ Encode.string paramName
+                        , Encode.string paramValue
+                        ])
+                    parameters
+    in
+        Encode.encode 4
+            Encode.object
+                [ ( "credentials", encodeCredentials )
+                , ( "command", encodeCommand )
+                , ( "parameters", encodeParameters )
+                ]
 
 
 
@@ -68,6 +99,7 @@ type Response
     = NullResponse
     | GenericSuccess
     | Log (List String)
+    | APIError String
 
 responseDecoder : Decode.Decoder Response
 responseDecoder =
@@ -83,11 +115,12 @@ nonNullResponseDecoder =
             "success" ->
                 Decode.oneOf
                     [ logResponseDecoder
-                    --, Decode.succeed GenericSuccess
+                    , Decode.succeed GenericSuccess
                     ]
 
             "error" ->
-                ("message" := Decode.string) `Decode.andThen` Decode.fail
+                ("message" := Decode.string)
+                `Decode.andThen` message -> Decode.succeed message
 
             _ ->
                 Decode.fail ("Encountered unknown response status: " ++ status)

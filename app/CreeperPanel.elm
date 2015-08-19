@@ -1,69 +1,87 @@
 module CreeperPanel where
 
-import CreeperPanel.Aries as Aries
-import CreeperPanel.Model as Model
-import CreeperPanel.Actions as Actions
+import CreeperPanel.State as State
 import CreeperPanel.View as View
-import CreeperPanel.Ports as Ports
+import AppUtils as AppUtils
+
 import Json.Decode as Decode
 import Html
 
--- Ports
 
--- TODO: Get this through some method other than initial loading via JS...
-port initServer : Model.ServerModel
 
-credentials : Signal (Maybe Aries.Credentials)
-credentials =
-    Signal.map (Maybe.map Ports.credentialsOfServer) currentServerModel
+---- PORTS ----
 
-port logRequests : Signal (Maybe Aries.Request)
-port logRequests =
-    Ports.logRequests credentials
+-- Automatic Log Requests
 
-port logResponses : Signal String
+--port logAutoRequest : Signal (Task x ())
+--port logAutoRequest =
+--    let
+--        sendAutoRequest _ =
+--            Task.send GlobalActions.addresses.logRequest
 
--- Actions
+-- on GA.logRequest.signal, if current server credentials, update logAPIRequest port to new request using current server credentials.
+--port logAPIRequest : Signal (Maybe Aries.EncodedRequest)
+--port logAPIRequest =
+--    let
 
-logResponseReactions : Signal (Maybe Actions.Action)
-logResponseReactions =
-    Ports.logResponseReactions logResponses
+    --let
+    --    onLogRequest =
+    --        Signal.sampleOn GlobalActions.signals.logRequest
 
-userActions : Signal.Mailbox (Maybe Actions.Action)
-userActions =
-    Signal.mailbox Nothing
+    --    credentials model =
+    --        { key = model.server.key
+    --        , secret = model.server.secret
+    --        }
 
-appActions : Signal (Maybe Actions.Action)
-appActions =
-    Signal.mergeMany
-        [ userActions.signal
-        , logResponseReactions
-        ]
+    --    request _ (Just credentials) ->
+    --        { credentials = credentials
+    --        , command = ("minecraft", "readconsole")
+    --        , parameters = []
+    --        }
 
--- Model
+    --in
+    --    Signal.map request
+    --        GlobalActions.signals.logRequest
+    --        (Signal.map (Maybe.map credentials) model)
+    --    |> onLogRequest
+    --    |> AppUtils.onlyJusts
+    --    |> Signal.map Aries.encodeRequest
 
-model : Signal Model.Model
+
+--port logAPIResponse : Signal (Maybe Encode.Value)
+
+
+
+---- MAIN ----
+
+model : Signal State.Model
 model =
     let
-        initModelWithoutServer = Model.initModel
-
-        initModel =
-            { initModelWithoutServer | currentServer <- Just initServer }
-    in 
+        -- Turn Maybes NoOps/Actions.
+        update =
+            AppUtils.noUpdateOrJustAction State.update
+    in
         Signal.foldp
-            (\ (Just action) model -> Actions.update action model)
-            initModel
+            update
+            State.initModel
             appActions
 
-currentServerModel : Signal (Maybe Model.ServerModel)
-currentServerModel =
-    Signal.map (\ model -> model.currentServer) model
+appActions : Signal (Maybe State.Action)
+appActions =
+    Signal.mergeMany
+        [ localActions.signal
+        ]
+    |> AppUtils.onlyJusts
 
--- Main
+localActions : Signal.Mailbox (Maybe State.Action)
+localActions =
+    Signal.mailbox Nothing
 
 main : Signal Html.Html
 main =
     let
-        userActionsAddress = Signal.forwardTo userActions.address Just
+        localActionsAddress : Signal.Address State.Action
+        localActionsAddress =
+            Signal.forwardTo localActions.address Just
     in
-        Signal.map (View.view userActionsAddress) model
+        Signal.map (View.view localActionsAddress) model

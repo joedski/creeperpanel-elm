@@ -3,12 +3,14 @@ module CreeperPanel.Aries
     , Credentials
     , consoleLogRequest
     , consoleCommandRequest
+    , EncodedRequest
     , Response(..)
     , responseDecoder
     )
     where
 
 import Json.Decode as Decode exposing ((:=))
+import Json.Encode as Encode
 
 {-
 Initializing Response Ports
@@ -33,8 +35,8 @@ type alias Credentials =
     , secret : String
     }
 
-genericRequest : Credentials -> (String, String) -> List (String, String) -> Request
-genericRequest credentials command parameters =
+request : Credentials -> (String, String) -> List (String, String) -> Request
+request credentials command parameters =
     { credentials = credentials
     , command = command
     , parameters = parameters
@@ -42,7 +44,7 @@ genericRequest credentials command parameters =
 
 paramlessRequest : Credentials -> (String, String) -> Request
 paramlessRequest credentials command =
-    genericRequest credentials command []
+    request credentials command []
 
 consoleLogRequest : Credentials -> Request
 consoleLogRequest credentials =
@@ -50,7 +52,13 @@ consoleLogRequest credentials =
 
 consoleCommandRequest : Credentials -> String -> Request
 consoleCommandRequest credentials command =
-    genericRequest credentials ("minecraft", "writeconsole") [("command", command)]
+    request credentials ("minecraft", "writeconsole") [("command", command)]
+
+
+
+---- Requests: Encoded ----
+
+type alias EncodedRequest = Encode.Value
 
 
 

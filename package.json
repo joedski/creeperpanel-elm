@@ -2,7 +2,7 @@
   "name": "creeperpanel-elm",
   "version": "0.1.0",
   "description": "Simple control panel for CreeperHost Minecraft Servers implemented in Elm+NW.js.",
-  "main": "public/index.html",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deps": "npm install && node node_modules/.bin/elm-package install",
@@ -19,12 +19,15 @@
   },
   "author": "Joseph Sikorski <joedski@gmail.com>",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "css-brunch": "^1.7.0",
     "elm": "^1.5.2",
     "elm-brunch": "^0.2.0",
     "javascript-brunch": "^1.7.1",
     "less-brunch": "^1.8.1",
-    "nw": "^0.12.2"
+    "electron-prebuilt": "^0.30.3"
+  },
+  "scripts": {
+    "start": "brunch build && electron ."
   }
 }

@@ -10,6 +10,7 @@ import Time
 import CreeperPanel.Aries as Aries
 import CreeperPanel.Model as Model
 import CreeperPanel.Actions as Actions
+import AppUtils
 
 import Debug
 
@@ -19,13 +20,6 @@ import Debug
 
 
 ----- Utility Functions -----
-
-boolOfMaybe : Maybe a -> Bool
-boolOfMaybe maybeSomething =
-    case maybeSomething of
-        Just something -> True
-
-        Nothing -> False
 
 reactionTo : Result String Aries.Response -> Maybe Actions.Action
 reactionTo responseResult =
@@ -49,48 +43,44 @@ reactionTo responseResult =
 
 logTicker : Signal Time.Time
 logTicker =
-    Time.every (Time.second * 10)
+    Time.every (Time.second * 15)
 
 
 
 ----- Public Functions -----
 
--- I can't think of anothing way to do this yet,
--- so I'm just starting with Nothing which, on output, I think maps to JS null.
--- JS cannot, however, pass a null back as a port value.
-logRequests : Signal (Maybe Aries.Credentials) -> Signal (Maybe Aries.Request)
-logRequests maybeCredentialsSignal =
-    let
-        maybeCredentialsSignalOnTick : Signal (Maybe Aries.Credentials)
-        maybeCredentialsSignalOnTick =
-            Signal.sampleOn logTicker maybeCredentialsSignal
-    in
-        Signal.map
-            (Maybe.map Aries.consoleLogRequest)
-            maybeCredentialsSignalOnTick
-        |> Signal.filter
-            boolOfMaybe
-            Nothing
+---- I can't think of anothing way to do this yet,
+---- so I'm just starting with Nothing which, on output, I think maps to JS null.
+---- JS cannot, however, pass a null back as a port value.
+--logRequests : Signal (Maybe Aries.Credentials) -> Signal (Maybe Aries.Request)
+--logRequests maybeCredentialsSignal =
+--    let
+--        maybeCredentialsSignalOnTick : Signal (Maybe Aries.Credentials)
+--        maybeCredentialsSignalOnTick =
+--            Signal.sampleOn logTicker maybeCredentialsSignal
+--    in
+--        Signal.map
+--            (Maybe.map Aries.consoleLogRequest)
+--            maybeCredentialsSignalOnTick
+--        |> AppUtils.onlyJusts
 
-credentialsOfServer : Model.ServerModel -> Aries.Credentials
-credentialsOfServer server =
-    { key = server.key
-    , secret = server.secret
-    }
+--credentialsOfServer : Model.ServerModel -> Aries.Credentials
+--credentialsOfServer server =
+--    { key = server.key
+--    , secret = server.secret
+--    }
 
--- Doing the same thing again here with filtering Nothings.
--- Can't think of a better way to do this. but at least here it's hidden.
--- While I'm reasonably sure Nothing will only appear as the initial value,
--- this still feels skeevy.
-logResponseReactions : Signal String -> Signal (Maybe Actions.Action)
-logResponseReactions logResponses =
-    let
-        decodeResponse =
-            Decode.decodeString Aries.responseDecoder
-    in
-        Signal.map
-            (reactionTo << decodeResponse)
-            logResponses
-        |> Signal.filter
-            boolOfMaybe
-            Nothing
+---- Doing the same thing again here with filtering Nothings.
+---- Can't think of a better way to do this. but at least here it's hidden.
+---- While I'm reasonably sure Nothing will only appear as the initial value,
+---- this still feels skeevy.
+--logResponseReactions : Signal Decode.Value -> Signal (Maybe Actions.Action)
+--logResponseReactions logResponses =
+--    let
+--        decodeResponse =
+--            Decode.decodeValue Aries.responseDecoder
+--    in
+--        Signal.map
+--            (reactionTo << decodeResponse)
+--            logResponses
+--        |> AppUtils.onlyJusts

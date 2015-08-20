@@ -4,6 +4,15 @@ import CreeperPanel.State as State
 import CreeperPanel.View as View
 import CreeperPanel.Aries as Aries
 import CreeperPanel.GlobalActions as GlobalActions
+-- In order to actually use the attributes of an exposed record, you have to expose it into the current namespace.
+-- Things like Foo.foos.foobar do not work.
+-- Because... Elm looks for a module named Foo.foos?  That seems odd.
+-- That seems borne out by tests.  With the following `exposing` line,
+-- addresses.logRequest works.  However, after this,
+-- I tried (.logRequest GlobalActions.addresses), and that also worked.
+-- Being that direct function application works, of course it can be
+-- rewritten with forward application into (GlobalActions.addresses |> .logRequest)
+-- Which reads more sensically except for the random `|>`.
 import CreeperPanel.GlobalActions exposing (addresses, signals)
 import AppUtils
 
@@ -26,6 +35,8 @@ port logAutoRequest =
         sendAutoRequest : a -> Task.Task x ()
         sendAutoRequest _ =
             Signal.send addresses.logRequest ()
+            --Signal.send (.logRequest GlobalActions.addresses) ()
+            --Signal.send (GlobalActions.addresses |> .logRequest) ()
 
         ticker : Signal Time.Time
         ticker =

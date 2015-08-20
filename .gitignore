@@ -65,4 +65,4 @@ elm.js
 # Build dir.
 public
 
-app/assets/testkeys.json
+**/testkeys.json

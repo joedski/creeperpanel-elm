@@ -42,5 +42,5 @@ mapMaybeSignal f maybeSignal =
 -- derived from andMap/(~)
 andMapMaybeSignal : Signal (Maybe (b -> c)) -> Signal (Maybe b) -> Signal (Maybe c)
 andMapMaybeSignal maybeFunSignal maybeOtherSignal =
-    -- just not fun signal.
+    -- Just notFunSignal :(
     Signal.map2 maybeApply maybeFunSignal maybeOtherSignal

@@ -1,8 +1,12 @@
 module CreeperPanel.GlobalActions
-    ( addresses
+    ( Addresses
+    , addresses
+    , Signals
     , signals
     )
     where
+
+import AppUtils
 
 {-
 This module exposes the signals and addresses of mailboxes for actions which
@@ -16,10 +20,20 @@ may instead start API requests whose eventual results lead to updates, or simila
 
 -- Records which break out the addresses and signals.
 
+type alias Addresses =
+    { logRequest : Signal.Address ()
+    }
+
+addresses : Addresses
 addresses =
     { logRequest = Signal.forwardTo logRequest.address Just
     }
 
+type alias Signals =
+    { logRequest : Signal.Signal (Maybe ())
+    }
+
+signals : Signals
 signals =
     { logRequest = AppUtils.onlyJusts logRequest.signal
     }

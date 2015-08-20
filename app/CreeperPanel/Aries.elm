@@ -4,6 +4,7 @@ module CreeperPanel.Aries
     , consoleLogRequest
     , consoleCommandRequest
     , EncodedRequest
+    , encodedRequest
     , Response(..)
     , responseDecoder
     )
@@ -63,33 +64,41 @@ type alias EncodedRequest = String
 encodedRequest : Request -> String
 encodedRequest request =
     let
+        encodeCredentials : Credentials -> Encode.Value
         encodeCredentials credentials =
             Encode.object
                 [ ( "key", Encode.string credentials.key )
                 , ( "secret", Encode.string credentials.secret )
                 ]
 
+        encodeCommand : (String, String) -> Encode.Value
         encodeCommand (section, command) =
             Encode.list
                 [ Encode.string section
                 , Encode.string command
                 ]
 
+        encodeParameters : List (String, String) -> Encode.Value
         encodeParameters parameters =
             Encode.list
-                List.map
-                    ((paramName, paramValue) ->
-                        [ Encode.string paramName
-                        , Encode.string paramValue
-                        ])
-                    parameters
-    in
-        Encode.encode 4
-            Encode.object
-                [ ( "credentials", encodeCredentials )
-                , ( "command", encodeCommand )
-                , ( "parameters", encodeParameters )
+                (List.map encodeSingleParameter parameters)
+
+        encodeSingleParameter : (String, String) -> Encode.Value
+        encodeSingleParameter (paramName, paramValue) =
+            Encode.list
+                [ Encode.string paramName
+                , Encode.string paramValue
                 ]
+
+        encoded : Request -> Encode.Value
+        encoded request =
+            Encode.object
+                [ ( "credentials", encodeCredentials request.credentials )
+                , ( "command", encodeCommand request.command )
+                , ( "parameters", encodeParameters request.parameters )
+                ]
+    in
+        Encode.encode 4 (encoded request)
 
 
 
@@ -120,7 +129,7 @@ nonNullResponseDecoder =
 
             "error" ->
                 ("message" := Decode.string)
-                `Decode.andThen` message -> Decode.succeed message
+                `Decode.andThen` \ message -> Decode.succeed (APIError message)
 
             _ ->
                 Decode.fail ("Encountered unknown response status: " ++ status)

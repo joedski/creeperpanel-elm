@@ -10,6 +10,7 @@ module CreeperPanel.Aries
     )
     where
 
+-- Aries should not import anything app-specific, only core packages.
 import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
 
@@ -80,15 +81,16 @@ encodedRequest request =
 
         encodeParameters : List (String, String) -> Encode.Value
         encodeParameters parameters =
-            Encode.list
+            Encode.object
                 (List.map encodeSingleParameter parameters)
 
-        encodeSingleParameter : (String, String) -> Encode.Value
+        encodeSingleParameter : (String, String) -> (String, Encode.Value)
         encodeSingleParameter (paramName, paramValue) =
-            Encode.list
-                [ Encode.string paramName
-                , Encode.string paramValue
-                ]
+            --Encode.list
+            --    [ Encode.string paramName
+            --    , Encode.string paramValue
+            --    ]
+            (paramName, Encode.string paramValue)
 
         encoded : Request -> Encode.Value
         encoded request =

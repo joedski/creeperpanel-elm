@@ -1,11 +1,15 @@
 module CreeperPanel.State
-    ( Status
+    ( Status(..)
     , Model, initModel
-    , Action, update
+    , Action(..), update
     , LogModel
-    , LogAction, updateLog
+    , LogAction(..), updateLog
+    , LogLineModel
+    , ServerModel
     )
     where
+
+import CreeperPanel.Aries as Aries
 
 {-
 This module defines the models in the app, the actions that can update them,
@@ -29,11 +33,13 @@ type Status
 
 type alias Model =
     { log : LogModel
+    , currentServer : Maybe ServerModel
     }
 
 initModel : Model
 initModel =
     { log = initLogModel
+    , currentServer = Nothing
     }
 
 type Action
@@ -70,6 +76,7 @@ updateLog action model =
         UpdateLogLines newLogLines ->
             { model
                 | lines <- List.map logLineModelOfString newLogLines
+                , status <- Loaded
             }
 
         UpdateLogStatus status ->
@@ -81,3 +88,12 @@ type alias LogLineModel = String
 logLineModelOfString : String -> LogLineModel
 logLineModelOfString string =
     string
+
+
+
+----- Server
+
+type alias ServerModel =
+    { name : String
+    , credentials : Aries.Credentials
+    }

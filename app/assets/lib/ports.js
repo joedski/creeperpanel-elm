@@ -1,35 +1,33 @@
+var Aries = require( 'creeperhost-aries' );
+
+function normalizeAriesResponse( parsedResponse ) {
+	var normalizedResponse = {
+		status: parsedResponse.status
+	};
+
+	if( parsedResponse.message ) {
+		normalizedResponse.message = parsedResponse.message;
+	}
+
+	if( parsedResponse.hasOwnProperty( 'log' ) ) {
+		normalizedResponse.log = parsedResponse.log
+			.split( /(\r?\n)+/ )
+			.filter( function( line ) { return !! line; })
+			;
+	}
+
+	return normalizedResponse;
+}
+
 exports.init = function init( elmApp ) {
-	// var counter = 0;
+	elmApp.ports.logAPIRequest.subscribe( function( requestString ) {
+		console.log( 'logRequests:', requestString );
+		var request = JSON.parse( requestString );
+		var ariesRequest = new Aries( request.credentials.key, request.credentials.key );
 
-	elmApp.ports.logAPIRequest.subscribe( function( request ) {
-		console.log( 'logRequests:', request );
-
-	// 	sendResponseLater( counter );
-
-	// 	++counter;
-
-	// 	function sendResponseLater( count ) {
-	// 		setTimeout( actualSend, 2000 );
-
-		// 	function actualSend() {
-		// 		// Stringifying because Elm bugs out if you pass an array created in the Node context rather than in the Webkit context.
-		// 		// You have to in some manner bring in the window object, and use window.Array.apply( null, nodeSideArray ) to generate a compliant array.
-		// 		elmApp.ports.logResponses.send( JSON.stringify({
-		// 			status: "success",
-		// 			// message: null,
-		// 			log: getPretendLogLines( count )
-		// 		}));
-		// 	}
-		// }
-
-	// 	function getPretendLogLines( count ) {
-	// 		var i, r = [];
-
-	// 		for( i = 0; i <= count; ++i ) {
-	// 			r.push( "Line " + String( i ) );
-	// 		}
-
-	// 		return r;
-	// 	}
+		ariesRequest.exec( request.command[ 0 ], request.command[ 1 ], function( parsedResponse, responseStream, rawResponse ) {
+			var normalizedResponse = normalizeAriesResponse( parsedResponse );
+			elmApp.ports.logAPIResponse.send( JSON.stringify( normalizedResponse ) );
+		});
 	});
 }

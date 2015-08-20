@@ -12,14 +12,10 @@ exports.init = function init( Elm ) {
 			secret: testKeys.secret
 		},
 
-		// All JSON passed between contexts should be in the form JSON strings.
-		// logAPIResponse: "null"
-
-		// logAPIResponse: {
-		// 	success: null,
-		// 	message: null,
-		// 	log: null
-		// }
+		// Note: Although JSON is passed in as a string, this port is a Maybe,
+		// and therefore passing null yields a Nothing.
+		// A string is interpreted as a valid response. (Although the error case is handled.)
+		logAPIResponse: null
 	});
 
 	// ports here.

@@ -14,6 +14,11 @@ exports.config =
 		stylesheets:
 			joinTo: "app.css"
 
+			order:
+				before: [
+					/styles[\/\\]fonts\.less$/
+				]
+
 		templates:
 			joinTo: "lib.js"
 

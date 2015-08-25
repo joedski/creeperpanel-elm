@@ -19,15 +19,18 @@ function normalizeAriesResponse( parsedResponse ) {
 	return normalizedResponse;
 }
 
-exports.init = function init( elmApp ) {
-	elmApp.ports.logAPIRequest.subscribe( function( requestString ) {
-		console.log( 'logRequests:', requestString );
+function bindAPIRequestResponsePorts( requestPort, responsePort ) {
+	requestPort.subscribe( function( requestString ) {
 		var request = JSON.parse( requestString );
-		var ariesRequest = new Aries( request.credentials.key, request.credentials.key );
+		var ariesRequest = new Aries( request.credentials.key, request.credentials.secret );
 
-		ariesRequest.exec( request.command[ 0 ], request.command[ 1 ], function( parsedResponse, responseStream, rawResponse ) {
+		ariesRequest.exec( request.command[ 0 ], request.command[ 1 ], request.parameters, function( parsedResponse, responseStream, rawResponse ) {
 			var normalizedResponse = normalizeAriesResponse( parsedResponse );
-			elmApp.ports.logAPIResponse.send( JSON.stringify( normalizedResponse ) );
+			responsePort.send( JSON.stringify( normalizedResponse ) );
 		});
-	});
+	})
+}
+
+exports.init = function init( elmApp ) {
+	bindAPIRequestResponsePorts( elmApp.ports.logAPIRequest, elmApp.ports.logAPIResponse );
 }

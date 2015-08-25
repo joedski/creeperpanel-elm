@@ -4,7 +4,16 @@ import CreeperPanel.State as State
 import CreeperPanel.View as View
 import CreeperPanel.Aries as Aries
 import CreeperPanel.GlobalActions as GlobalActions
-import CreeperPanel.GlobalActions exposing (addresses, signals)
+-- In order to actually use the attributes of an exposed record, you have to expose it into the current namespace.
+-- Things like Foo.foos.foobar do not work.
+-- Because... Elm looks for a module named Foo.foos?  That seems odd.
+-- That seems borne out by tests.  With the following `exposing` line,
+-- addresses.logRequest works.  However, after this,
+-- I tried (.logRequest GlobalActions.addresses), and that also worked.
+-- Being that direct function application works, of course it can be
+-- rewritten with forward application into (GlobalActions.addresses |> .logRequest)
+-- Which reads more sensically except for the random `|>`.
+--import CreeperPanel.GlobalActions exposing (addresses, signals)
 import AppUtils
 
 import Json.Decode as Decode
@@ -16,8 +25,15 @@ import Debug
 
 
 ---- PORTS ----
+---------------
+
+-- FPO Thingies --
 
 port fpoServerCredentials : Aries.Credentials
+
+
+
+-- Log Requests --
 
 -- Automatic Log Requests
 
@@ -26,13 +42,17 @@ port logAutoRequest =
     let
         sendAutoRequest : a -> Task.Task x ()
         sendAutoRequest _ =
-            Signal.send addresses.logRequest ()
+            --Signal.send GlobalActions.addresses |> .logRequest ()
+            --Signal.send (.logRequest GlobalActions.addresses) ()
+            Signal.send (GlobalActions.addresses |> .logRequest) ()
 
         ticker : Signal Time.Time
         ticker =
             Time.every (15 * Time.second)
     in           
         Signal.map sendAutoRequest ticker
+
+-- Log API Request Ports
 
 port logAPIRequest : Signal (Maybe Aries.EncodedRequest)
 port logAPIRequest =
@@ -49,7 +69,7 @@ port logAPIRequest =
             AppUtils.mapMaybeSignal encodedRequest currentCredentials
             |> AppUtils.onlyJusts
     in
-        Signal.sampleOn signals.logRequest requestSignal
+        Signal.sampleOn (GlobalActions.signals |> .logRequest) requestSignal
 
 port logAPIResponse : Signal (Maybe String)
 
@@ -69,7 +89,7 @@ logAPIResponseReaction =
                     logReactionToResponse response
 
                 Just (Err message) ->
-                    Nothing |> Debug.log message
+                    Just (State.UpdateLog (State.UpdateLogStatus (State.Errored message)))
 
         logReactionToResponse response =
             case response of
@@ -91,11 +111,12 @@ logAPIRequestReaction : Signal (Maybe State.Action)
 logAPIRequestReaction =
     Signal.map
         (always (Just (State.UpdateLog (State.UpdateLogStatus State.Pending))))
-        signals.logRequest
+        (GlobalActions.signals |> .logRequest)
 
 
 
 ---- MAIN ----
+--------------
 
 model : Signal State.Model
 model =

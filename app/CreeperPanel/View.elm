@@ -9,6 +9,10 @@ import Html
 import Html.Attributes as Attrs
 import Flex
 
+
+
+-------- Main --------
+
 view : Signal.Address State.Action -> State.Model -> Html.Html
 view address model =
     let
@@ -26,6 +30,10 @@ view address model =
             ]
             [ viewConsole address model
             ]
+
+
+
+-------- Console --------
 
 viewConsole : Signal.Address State.Action -> State.Model -> Html.Html
 viewConsole address model =
@@ -82,3 +90,9 @@ viewConsoleLogLine : Signal.Address State.Action -> State.LogLineModel -> Html.H
 viewConsoleLogLine address model =
     Html.div [ Attrs.class "console-log-line" ]
         [ Html.text model ]
+
+-- TODO: Command Line...
+
+
+
+-------- Server Buttons --------

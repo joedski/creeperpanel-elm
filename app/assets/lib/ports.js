@@ -11,8 +11,9 @@ function normalizeAriesResponse( parsedResponse ) {
 
 	if( parsedResponse.hasOwnProperty( 'log' ) ) {
 		normalizedResponse.log = parsedResponse.log
-			.split( /(\r?\n)+/ )
-			.filter( function( line ) { return !! line; })
+			// Note: Capture group causes the delimiter to be included in the results, use of non-capturing group prevents this.
+			.split( /(?:\r?\n)+/ )
+			.filter( function( line ) { return ! /^\s*$/.test( line ); })
 			;
 	}
 

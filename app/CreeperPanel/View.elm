@@ -7,17 +7,42 @@ import CreeperPanel.State as State
 
 import Html
 import Html.Attributes as Attrs
+import Flex
 
 view : Signal.Address State.Action -> State.Model -> Html.Html
 view address model =
-    Html.div [ Attrs.class "panel-app" ] [ viewConsole address model ]
+    let
+        viewStyles = 
+            [ ("width", "100vw")
+            , ("height", "100vh")
+            ]
+            ++ Flex.display
+            ++ (Flex.direction Flex.Vertical)
+            ++ (Flex.justifyContent Flex.Stretch)
+    in
+        Html.div
+            [ Attrs.class "panel-app"
+            , Attrs.style viewStyles
+            ]
+            [ viewConsole address model
+            ]
 
 viewConsole : Signal.Address State.Action -> State.Model -> Html.Html
 viewConsole address model =
-    Html.div [ Attrs.class "console" ]
-        [ viewConsoleLogStatus address model
-        , viewConsoleLog address model
-        ]
+    let
+        consoleStyles =
+            Flex.display
+            ++ (Flex.direction Flex.Vertical)
+            ++ (Flex.justifyContent Flex.Stretch)
+            ++ (Flex.grow 1)
+    in
+        Html.div
+            [ Attrs.class "console"
+            , Attrs.style consoleStyles
+            ]
+            [ viewConsoleLogStatus address model
+            , viewConsoleLog address model
+            ]
 
 viewConsoleLogStatus : Signal.Address State.Action -> State.Model -> Html.Html
 viewConsoleLogStatus address model =
@@ -41,8 +66,17 @@ viewConsoleLogStatus address model =
 
 viewConsoleLog : Signal.Address State.Action -> State.Model -> Html.Html
 viewConsoleLog address model =
-    Html.div [ Attrs.class "console-log" ]
-        (List.map (viewConsoleLogLine address) (model.log |> .lines))
+    let
+        consoleLogStyles =
+            [ ("overflow", "auto")
+            ]
+            ++ (Flex.grow 1)
+    in
+        Html.div
+            [ Attrs.class "console-log"
+            , Attrs.style consoleLogStyles
+            ]
+            (List.map (viewConsoleLogLine address) (model.log |> .lines))
 
 viewConsoleLogLine : Signal.Address State.Action -> State.LogLineModel -> Html.Html
 viewConsoleLogLine address model =

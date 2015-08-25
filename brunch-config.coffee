@@ -7,6 +7,11 @@ exports.config =
 			# /^app[\/\\]js[\\/]/
 		]
 
+		ignored: [
+			/(^|[\/\\])_/
+			/^bower_components[\/\\]bootstrap[\/\\]/
+		]
+
 	files:
 		javascripts:
 			joinTo: "lib.js"
@@ -16,7 +21,8 @@ exports.config =
 
 			order:
 				before: [
-					/styles[\/\\]fonts\.less$/
+					'fonts.less'
+					'theme.less'
 				]
 
 		templates:

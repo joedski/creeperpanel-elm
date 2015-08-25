@@ -1,0 +1,25 @@
+{
+  "name": "creeperpanel-elm",
+  "main": "index.js",
+  "version": "0.1.0",
+  "homepage": "https://github.com/joedski/creeperpanel-elm",
+  "authors": [
+    "Joseph Sikorski <joedski@gmail.com>"
+  ],
+  "description": "Control panel for CreeperHost servers implemented in Elm.\"",
+  "keywords": [
+    "creeperhost",
+    "creeperpanel",
+    "controlpanel",
+    "elm"
+  ],
+  "license": "ISC",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

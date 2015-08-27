@@ -91,25 +91,25 @@ logAPIResponseReaction =
     let
         logReactionTo result =
             case result of
-                _ ->
-                    Nothing
-
                 Just (Ok response) ->
                     logReactionToResponse response
 
                 Just (Err message) ->
                     Just (State.UpdateLog (State.UpdateLogStatus (State.Errored message)))
 
-        logReactionToResponse response =
-            case response of
                 _ ->
                     Nothing
 
+        logReactionToResponse response =
+            case response of
                 Aries.Log lines ->
                     Just (State.UpdateLog (State.UpdateLogLines lines))
 
                 Aries.APIError message ->
                     Just (State.UpdateLog (State.UpdateLogStatus (State.Errored message)))
+
+                _ ->
+                    Nothing
     in
         Signal.map logReactionTo logAPIDecodedResponse
 

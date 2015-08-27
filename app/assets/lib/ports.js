@@ -22,6 +22,10 @@ function normalizeAriesResponse( parsedResponse ) {
 
 function bindAPIRequestResponsePorts( requestPort, responsePort ) {
 	requestPort.subscribe( function( requestString ) {
+		if( ! requestString ) {
+			return;
+		}
+
 		var request = JSON.parse( requestString );
 		var ariesRequest = new Aries( request.credentials.key, request.credentials.secret );
 

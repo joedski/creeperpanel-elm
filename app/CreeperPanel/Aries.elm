@@ -1,6 +1,8 @@
 module CreeperPanel.Aries
     ( Request
     , Credentials
+    , request
+    , paramlessRequest
     , consoleLogRequest
     , consoleCommandRequest
     , EncodedRequest

@@ -22,20 +22,32 @@ may instead start API requests whose eventual results lead to updates, or simila
 
 type alias Addresses =
     { logRequest : Signal.Address ()
+    , serverStopRequest : Signal.Address ()
+    , serverRestartRequest : Signal.Address ()
+    , serverStartRequest : Signal.Address ()
     }
 
 addresses : Addresses
 addresses =
     { logRequest = Signal.forwardTo logRequest.address Just
+    , serverStopRequest = Signal.forwardTo serverStopRequest.address Just
+    , serverRestartRequest = Signal.forwardTo serverRestartRequest.address Just
+    , serverStartRequest = Signal.forwardTo serverStartRequest.address Just
     }
 
 type alias Signals =
     { logRequest : Signal.Signal (Maybe ())
+    , serverStopRequest : Signal.Signal (Maybe ())
+    , serverRestartRequest : Signal.Signal (Maybe ())
+    , serverStartRequest : Signal.Signal (Maybe ())
     }
 
 signals : Signals
 signals =
     { logRequest = AppUtils.onlyJusts logRequest.signal
+    , serverStopRequest = AppUtils.onlyJusts serverStopRequest.signal
+    , serverRestartRequest = AppUtils.onlyJusts serverRestartRequest.signal
+    , serverStartRequest = AppUtils.onlyJusts serverStartRequest.signal
     }
 
 
@@ -45,4 +57,16 @@ signals =
 
 logRequest : Signal.Mailbox (Maybe ())
 logRequest =
+    Signal.mailbox Nothing
+
+serverStopRequest : Signal.Mailbox (Maybe ())
+serverStopRequest =
+    Signal.mailbox Nothing
+
+serverRestartRequest : Signal.Mailbox (Maybe ())
+serverRestartRequest =
+    Signal.mailbox Nothing
+
+serverStartRequest : Signal.Mailbox (Maybe ())
+serverStartRequest =
     Signal.mailbox Nothing

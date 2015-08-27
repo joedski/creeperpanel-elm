@@ -33,6 +33,19 @@ port fpoServerCredentials : Aries.Credentials
 
 
 
+-- Request Template
+apiRequest : (Aries.Credentials -> Aries.Request) -> Signal.Signal a -> Signal.Signal (Maybe Aries.EncodedRequest)
+apiRequest requestOfCredentials impetusSignal =
+    let
+        encodedRequest credentials =
+            Aries.encodedRequest (requestOfCredentials credentials)
+
+        requestSignal =
+            AppUtils.mapMaybeSignal encodedRequest modelServerCredentials
+            |> AppUtils.onlyJusts
+    in
+        Signal.sampleOn impetusSignal requestSignal
+
 -- Log Requests --
 
 -- Automatic Log Requests
@@ -54,19 +67,15 @@ port logAutoRequest =
 
 -- Log API Request Ports
 
+-- Style Note: API should probably be Api to match how other Elm names are written.  Html, Json, etc.
 port logAPIRequest : Signal (Maybe Aries.EncodedRequest)
 port logAPIRequest =
     let
         encodedRequest credentials =
             Aries.encodedRequest (Aries.consoleLogRequest credentials)
 
-        currentCredentials =
-            model
-            |> Signal.map .currentServer
-            |> AppUtils.mapMaybeSignal .credentials
-
         requestSignal =
-            AppUtils.mapMaybeSignal encodedRequest currentCredentials
+            AppUtils.mapMaybeSignal encodedRequest modelServerCredentials
             |> AppUtils.onlyJusts
     in
         Signal.sampleOn (GlobalActions.signals |> .logRequest) requestSignal
@@ -82,7 +91,7 @@ logAPIResponseReaction =
     let
         logReactionTo result =
             case result of
-                Nothing ->
+                _ ->
                     Nothing
 
                 Just (Ok response) ->
@@ -93,10 +102,7 @@ logAPIResponseReaction =
 
         logReactionToResponse response =
             case response of
-                Aries.NullResponse ->
-                    Nothing
-
-                Aries.GenericSuccess ->
+                _ ->
                     Nothing
 
                 Aries.Log lines ->
@@ -112,6 +118,82 @@ logAPIRequestReaction =
     Signal.map
         (always (Just (State.UpdateLog (State.UpdateLogStatus State.Pending))))
         (GlobalActions.signals |> .logRequest)
+
+-- Server Start/Restart/Stop Ports
+
+port serverStartAPIRequest : Signal (Maybe Aries.EncodedRequest)
+port serverStartAPIRequest =
+    apiRequest
+        (\ credentials -> Aries.paramlessRequest credentials ("minecraft", "startserver"))
+        (GlobalActions.signals |> .serverStartRequest)
+
+port serverStartAPIResponse : Signal (Maybe String)
+
+serverStartAPIDecodedResponse : Signal (Maybe (Result String Aries.Response))
+serverStartAPIDecodedResponse =
+    Signal.map (Maybe.map (Decode.decodeString Aries.responseDecoder)) serverStartAPIResponse
+
+serverStartAPIResponseReaction : Signal (Maybe State.Action)
+serverStartAPIResponseReaction =
+    --let
+    --    reactionTo result =
+    --        case result of
+    --            Just (Ok response) ->
+    --                reactionToResponse response
+
+    --            _ ->
+    --                Nothing
+
+    --    logReactionToResponse response =
+    --        case response of
+    --            Aries.GenericSuccess ->
+    --                -- TODO: Should probably disable buttons until we have either a response or error.
+    --                Nothing
+
+    --            _ ->
+    --                Nothing
+    --in
+    --    Signal.map reactionTo serverStartAPIDecodedResponse
+    -- TODO: Actual reactions
+    Signal.constant Nothing
+
+-- Server Restart Requests
+
+port serverRestartAPIRequest : Signal (Maybe Aries.EncodedRequest)
+port serverRestartAPIRequest =
+    apiRequest
+        (\ credentials -> Aries.paramlessRequest credentials ("minecraft", "restartserver"))
+        (GlobalActions.signals |> .serverStartRequest)
+
+port serverRestartAPIResponse : Signal (Maybe String)
+
+serverRestartAPIDecodedResponse : Signal (Maybe (Result String Aries.Response))
+serverRestartAPIDecodedResponse =
+    Signal.map (Maybe.map (Decode.decodeString Aries.responseDecoder)) serverRestartAPIResponse
+
+serverRestartAPIResponseReaction : Signal (Maybe State.Action)
+serverRestartAPIResponseReaction =
+    -- TODO: Actual reactions
+    Signal.constant Nothing
+
+-- Server Stop Requests
+
+port serverStopAPIRequest : Signal (Maybe Aries.EncodedRequest)
+port serverStopAPIRequest =
+    apiRequest
+        (\ credentials -> Aries.paramlessRequest credentials ("minecraft", "stopserver"))
+        (GlobalActions.signals |> .serverStartRequest)
+
+port serverStopAPIResponse : Signal (Maybe String)
+
+serverStopAPIDecodedResponse : Signal (Maybe (Result String Aries.Response))
+serverStopAPIDecodedResponse =
+    Signal.map (Maybe.map (Decode.decodeString Aries.responseDecoder)) serverStopAPIResponse
+
+serverStopAPIResponseReaction : Signal (Maybe State.Action)
+serverStopAPIResponseReaction =
+    -- TODO: Actual reactions
+    Signal.constant Nothing
 
 
 
@@ -141,6 +223,13 @@ model =
             update
             initModel
             appActions
+
+-- convenience signal.
+modelServerCredentials : Signal (Maybe Aries.Credentials)
+modelServerCredentials =
+    model
+    |> Signal.map .currentServer
+    |> AppUtils.mapMaybeSignal .credentials
 
 appActions : Signal (Maybe State.Action)
 appActions =

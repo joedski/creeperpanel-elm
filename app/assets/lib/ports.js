@@ -34,4 +34,7 @@ function bindAPIRequestResponsePorts( requestPort, responsePort ) {
 
 exports.init = function init( elmApp ) {
 	bindAPIRequestResponsePorts( elmApp.ports.logAPIRequest, elmApp.ports.logAPIResponse );
+	bindAPIRequestResponsePorts( elmApp.ports.serverStartAPIRequest, elmApp.ports.serverStartAPIResponse );
+	bindAPIRequestResponsePorts( elmApp.ports.serverRestartAPIRequest, elmApp.ports.serverRestartAPIResponse );
+	bindAPIRequestResponsePorts( elmApp.ports.serverStopAPIRequest, elmApp.ports.serverStopAPIResponse );
 }

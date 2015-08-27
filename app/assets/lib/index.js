@@ -15,7 +15,10 @@ exports.init = function init( Elm ) {
 		// Note: Although JSON is passed in as a string, this port is a Maybe,
 		// and therefore passing null yields a Nothing.
 		// A string is interpreted as a valid response. (Although the error case is handled.)
-		logAPIResponse: null
+		logAPIResponse: null,
+		serverStartAPIResponse: null,
+		serverRestartAPIResponse: null,
+		serverStopAPIResponse: null
 	});
 
 	// ports here.

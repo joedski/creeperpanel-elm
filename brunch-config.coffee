@@ -14,7 +14,7 @@ exports.config =
 
 	files:
 		javascripts:
-			joinTo: "lib.js"
+			joinTo: "lib-bin.js"
 
 		stylesheets:
 			joinTo: "app.css"
@@ -26,7 +26,7 @@ exports.config =
 				]
 
 		templates:
-			joinTo: "lib.js"
+			joinTo: "lib-bin.js"
 
 	plugins:
 		elmBrunch:

@@ -4,9 +4,11 @@ module CreeperPanel.View
     where
 
 import CreeperPanel.State as State
+import CreeperPanel.GlobalActions as GlobalActions
 
 import Html
 import Html.Attributes as Attrs
+import Html.Events as Events
 import Flex
 
 
@@ -28,7 +30,8 @@ view address model =
             [ Attrs.class "panel-app"
             , Attrs.style viewStyles
             ]
-            [ viewConsole address model
+            [ viewServerControls address model
+            , viewConsole address model
             ]
 
 
@@ -95,4 +98,67 @@ viewConsoleLogLine address model =
 
 
 
--------- Server Buttons --------
+-------- Server Buttons + Stats --------
+
+viewServerControls : Signal.Address State.Action -> State.Model -> Html.Html
+viewServerControls address model =
+    let
+        styles =
+            Flex.display
+            ++ (Flex.justifyContent Flex.Stretch)
+    in
+        Html.div
+            [ Attrs.class "server-controls"
+            , Attrs.style styles
+            ]
+            [ viewServerControlsButtons address model
+            , viewServerControlsStats address model
+            ]
+
+viewServerControlsButtons : Signal.Address State.Action -> State.Model -> Html.Html
+viewServerControlsButtons address model =
+    let
+        styles =
+            Flex.display
+            ++ (Flex.justifyContent Flex.Stretch)
+            -- No flex-item styles here because the buttons don't resize.  I think.
+
+        buttonStyles =
+            [ ("margin", "2px")
+            ]
+            ++ (Flex.grow 1)
+            ++ (Flex.shrink 1)
+
+        button (address, value) colorClass label =
+            Html.div
+                [ Attrs.class ("btn btn-block btn-" ++ colorClass)
+                , Events.onClick address value
+                , Attrs.style buttonStyles
+                ]
+                [ Html.text label
+                ]
+    in
+        Html.div
+            [ Attrs.class "server-controls-buttons"
+            , Attrs.style styles
+            ]
+            [ button (GlobalActions.addresses |> .serverStopRequest, ()) "danger" "Stop"
+            , button (GlobalActions.addresses |> .serverRestartRequest, ()) "warning" "Restart"
+            , button (GlobalActions.addresses |> .serverStartRequest, ()) "success" "Start"
+            ]
+
+viewServerControlsStats : Signal.Address State.Action -> State.Model -> Html.Html
+viewServerControlsStats address model =
+    let
+        styles =
+            Flex.display
+            ++ (Flex.justifyContent Flex.Stretch)
+            ++ (Flex.grow 1)
+            ++ (Flex.shrink 1)
+    in
+        Html.div
+            [ Attrs.class "server-controls-stats"
+            , Attrs.style styles
+            ]
+            [ Html.text "Stats..."
+            ]
